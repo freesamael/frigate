@@ -166,8 +166,10 @@ class WebPushClient(Communicator):  # type: ignore[misc]
                 ].copy()
                 headers["urgency"] = "high"
                 ttl = 3600 if state == "end" else 0
+                headers["x-wns-cache-policy"] = "no-cache" if ttl == 0 else "cache"
 
                 # send message
+                logger.debug(f"Sending notification to {user} :: {headers}")
                 resp = pusher.send(
                     headers=headers,
                     ttl=ttl,
