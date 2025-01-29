@@ -203,21 +203,7 @@ async def set_gpu_stats(
                 stats["intel-qsv"] = {"gpu": "", "mem": ""}
                 hwaccel_errors.append(args)
         elif "vaapi" in args:
-            if is_vaapi_amd_driver():
-                if not config.telemetry.stats.amd_gpu_stats:
-                    continue
-
-                # AMD VAAPI GPU
-                amd_usage = get_amd_gpu_stats()
-
-                if amd_usage:
-                    stats["amd-vaapi"] = amd_usage
-                else:
-                    stats["amd-vaapi"] = {"gpu": "", "mem": ""}
-                    hwaccel_errors.append(args)
-            else:
-                if not config.telemetry.stats.intel_gpu_stats:
-                    continue
+            if config.telemetry.stats.intel_gpu_stats:
 
                 # intel VAAPI GPU
                 intel_usage = get_intel_gpu_stats()
@@ -226,6 +212,17 @@ async def set_gpu_stats(
                     stats["intel-vaapi"] = intel_usage or {"gpu": "", "mem": ""}
                 else:
                     stats["intel-vaapi"] = {"gpu": "", "mem": ""}
+                    hwaccel_errors.append(args)
+
+            if config.telemetry.stats.amd_gpu_stats:
+
+                # AMD VAAPI GPU
+                amd_usage = get_amd_gpu_stats()
+
+                if amd_usage:
+                    stats["amd-vaapi"] = amd_usage
+                else:
+                    stats["amd-vaapi"] = {"gpu": "", "mem": ""}
                     hwaccel_errors.append(args)
         elif "v4l2m2m" in args or "rpi" in args:
             # RPi v4l2m2m is currently not able to get usage stats

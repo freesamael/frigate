@@ -9,6 +9,7 @@ from frigate.const import (
     FFMPEG_HWACCEL_NVIDIA,
     FFMPEG_HWACCEL_VAAPI,
     FFMPEG_HWACCEL_VULKAN,
+    LIBVA_GPU_ENV_VAR,
 )
 from frigate.util.services import vainfo_hwaccel
 from frigate.version import VERSION
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 class LibvaGpuSelector:
     "Automatically selects the correct libva GPU."
 
-    _selected_gpu = None
+    _selected_gpu = os.environ.get(LIBVA_GPU_ENV_VAR)
 
     def get_selected_gpu(self) -> str:
         """Get selected libva GPU."""
