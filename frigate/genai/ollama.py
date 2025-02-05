@@ -31,6 +31,7 @@ class OllamaClient(GenAIClient):
                     response["error"],
                 )
                 return None
+            logger.debug(f"Initializing Ollama client with model {self.genai_config.model}")
             return client
         except Exception as e:
             logger.warning("Error initializing Ollama: %s", str(e))
