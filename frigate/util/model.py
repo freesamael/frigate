@@ -347,11 +347,8 @@ def get_ort_providers(
             )
         elif provider == "MIGraphXExecutionProvider":
             # MIGraphX uses more CPU than ROCM, while also being the same speed
-            if device == "MIGraphX":
-                providers.append(provider)
-                options.append({})
-            else:
-                continue
+            providers.append(provider)
+            options.append({})
         elif provider == "CPUExecutionProvider":
             providers.append(provider)
             options.append(
@@ -364,3 +361,14 @@ def get_ort_providers(
             options.append({})
 
     return (providers, options)
+
+
+def get_migraphx_compiled_cache_path(model_path: str) -> str:
+    if os.path.dirname(model_path).startswith(MODEL_CACHE_DIR):
+        # Model is already under MODEL_CACHE_DIR, simply put the .mxr file side by side.
+        base, _ = os.path.splitext(model_path)
+        return base + ".mxr"
+    else:
+        # Otherwise put it under MODEL_CACHE_DIR/migraphx/ with the same basename.
+        base_name = os.path.splitext(os.path.basename(model_path))[0]
+        return os.path.join(MODEL_CACHE_DIR, "migraphx", base_name + ".mxr")

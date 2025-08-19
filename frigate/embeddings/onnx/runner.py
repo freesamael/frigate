@@ -7,7 +7,7 @@ from typing import Any
 import onnxruntime as ort
 
 from frigate.const import MODEL_CACHE_DIR
-from frigate.util.model import get_ort_providers
+from frigate.util.model import get_ort_providers, get_migraphx_compiled_cache_path
 
 try:
     import openvino as ov
@@ -44,6 +44,16 @@ class ONNXModelRunner:
                     f"OpenVINO failed to build model, using CPU instead: {e}"
                 )
                 self.interpreter = None
+
+        # The corresponding provider_options were not correctly implemented in onnxruntime v1.20,
+        # so we can only use environment variables.
+        if "MIGraphXExecutionProvider" in providers:
+            cache_path = cache_path = get_migraphx_compiled_cache_path(model_path)
+            os.environ["ORT_MIGRAPHX_SAVE_COMPILED_MODEL"] = "1"
+            os.environ["ORT_MIGRAPHX_SAVE_COMPILE_PATH"] = cache_path
+            os.environ["ORT_MIGRAPHX_LOAD_COMPILED_MODEL"] = "1"
+            os.environ["ORT_MIGRAPHX_LOAD_COMPILE_PATH"] = cache_path
+            logger.debug(f"MIGraphX: MIGraphX compiled model will be saved at {cache_path}")
 
         # Use ONNXRuntime
         if self.interpreter is None:

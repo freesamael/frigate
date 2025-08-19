@@ -1,5 +1,6 @@
 import logging
 
+import os
 import numpy as np
 from pydantic import Field
 from typing_extensions import Literal
@@ -11,6 +12,7 @@ from frigate.detectors.detector_config import (
 )
 from frigate.util.model import (
     get_ort_providers,
+    get_migraphx_compiled_cache_path,
     post_process_dfine,
     post_process_rfdetr,
     post_process_yolo,
@@ -49,6 +51,16 @@ class ONNXDetector(DetectionApi):
         providers, options = get_ort_providers(
             detector_config.device == "CPU", detector_config.device
         )
+
+        # The corresponding provider_options were not correctly implemented in onnxruntime v1.20,
+        # so we can only use environment variables.
+        if "MIGraphXExecutionProvider" in providers:
+            cache_path = get_migraphx_compiled_cache_path(path)
+            os.environ["ORT_MIGRAPHX_SAVE_COMPILED_MODEL"] = "1"
+            os.environ["ORT_MIGRAPHX_SAVE_COMPILE_PATH"] = cache_path
+            os.environ["ORT_MIGRAPHX_LOAD_COMPILED_MODEL"] = "1"
+            os.environ["ORT_MIGRAPHX_LOAD_COMPILE_PATH"] = cache_path
+            logger.debug(f"ONNX: MIGraphX compiled model will be saved at {cache_path}")
 
         self.model = ort.InferenceSession(
             path, providers=providers, provider_options=options
